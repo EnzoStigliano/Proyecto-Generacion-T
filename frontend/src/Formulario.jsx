@@ -8,8 +8,6 @@ export default function Formulario() {
   const [mensajeError, setMensajeError] = useState("")
   const [mensajeExito, setMensajeExito] = useState("")
 
-  const API_URL = "https://proyecto-generacion-t.onrender.com/api"
-
   const tablas = {
     Proveedor: ["nombre", "cuit", "telefono", "email", "direccion", "ciudad", "provincia", "pais"],
     Categoria: ["nombre", "descripcion"],
@@ -27,9 +25,13 @@ export default function Formulario() {
   }, [tablaSeleccionada])
 
   const cargarDatos = async () => {
-    const res = await fetch(`${API_URL}/${tablaSeleccionada}`)
-    const data = await res.json()
-    setData(data)
+    try {
+      const res = await fetch(`http://localhost:3001/api/${tablaSeleccionada}`)
+      const data = await res.json()
+      setData(data)
+    } catch {
+      setData([])
+    }
   }
 
   const handleChange = (e) => {
@@ -41,7 +43,7 @@ export default function Formulario() {
     setMensajeError("")
     setMensajeExito("")
     try {
-      const res = await fetch(`${API_URL}/${tablaSeleccionada}`, {
+      const res = await fetch(`http://localhost:3001/api/${tablaSeleccionada}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
@@ -52,22 +54,21 @@ export default function Formulario() {
         setFormData({})
         cargarDatos()
       } else {
-        setMensajeError(result.error || "Los campos no tienen el formato indicado o no existen")
+        setMensajeError("Los campos no tienen el formato indicado o no existen")
       }
     } catch {
       setMensajeError("Error de conexión con el servidor")
     }
   }
 
-  const eliminarRegistro = async (id) => {
-    if (!window.confirm("¿Seguro que querés eliminar este registro?")) return
-    const res = await fetch(`${API_URL}/${tablaSeleccionada}/${id}`, { method: "DELETE" })
-    const result = await res.json()
-    if (res.ok) {
-      setMensajeExito(result.message)
-      cargarDatos()
-    } else {
-      setMensajeError(result.error)
+  const handleDelete = async (id) => {
+    try {
+      const res = await fetch(`http://localhost:3001/api/${tablaSeleccionada}/${id}`, {
+        method: "DELETE"
+      })
+      if (res.ok) cargarDatos()
+    } catch {
+      setMensajeError("Error al eliminar el registro")
     }
   }
 
@@ -99,27 +100,35 @@ export default function Formulario() {
       {mensajeExito && <p className="exito">{mensajeExito}</p>}
 
       <h2>Datos de {tablaSeleccionada}</h2>
-      <div className="table-container">
+
+      {data.length === 0 ? (
+        <p>No hay registros disponibles.</p>
+      ) : (
         <table>
           <thead>
             <tr>
-              {data.length > 0 && Object.keys(data[0]).map((col) => <th key={col}>{col}</th>)}
+              {Object.keys(data[0]).map((col) => (
+                <th key={col}>{col}</th>
+              ))}
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {data.map((fila) => {
-              const idCampo = Object.keys(fila).find(k => k.startsWith("id"))
-              return (
-                <tr key={fila[idCampo]}>
-                  {Object.values(fila).map((valor, i) => <td key={i}>{valor}</td>)}
-                  <td><button className="btn-delete" onClick={() => eliminarRegistro(fila[idCampo])}>Eliminar</button></td>
-                </tr>
-              )
-            })}
+            {data.map((fila) => (
+              <tr key={fila.id || Object.values(fila).join("-")}>
+                {Object.values(fila).map((valor, i) => (
+                  <td key={i}>{valor}</td>
+                ))}
+                <td>
+                  <button className="eliminar" onClick={() => handleDelete(fila[`id${tablaSeleccionada}`])}>
+                    Eliminar
+                  </button>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
-      </div>
+      )}
     </div>
   )
 }
