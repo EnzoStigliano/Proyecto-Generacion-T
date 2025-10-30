@@ -60,18 +60,14 @@ export default function Formulario() {
   }
 
   const handleDelete = async (id) => {
-    try {
-      if (!window.confirm("¿Seguro que querés eliminar este registro?")) return
-      const res = await fetch(`http://localhost:3001/api/${tablaSeleccionada}/${id}`, {
-        method: "DELETE"
-      })
-      const result = await res.json()
-      if (res.ok) {
-        setMensajeExito(result.message)
-        cargarDatos()
-      }
-    } catch {
-      setMensajeError("Error al eliminar el registro")
+    if (!window.confirm("¿Seguro que querés eliminar este registro?")) return
+    const res = await fetch(`${API_URL}/${tablaSeleccionada}/${id}`, { method: "DELETE" })
+    const result = await res.json()
+    if (res.ok) {
+      setMensajeExito(result.message)
+      cargarDatos()
+    } else {
+      setMensajeError(result.error)
     }
   }
 
