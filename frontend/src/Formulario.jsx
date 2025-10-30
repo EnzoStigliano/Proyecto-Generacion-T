@@ -26,7 +26,7 @@ export default function Formulario() {
 
   const cargarDatos = async () => {
     try {
-      const res = await fetch(`http://localhost:3001/api/${tablaSeleccionada}`)
+      const res = await fetch(`https://proyecto-generacion-t.onrender.com/api/${tablaSeleccionada}`)
       const data = await res.json()
       setData(data)
     } catch {
@@ -43,7 +43,7 @@ export default function Formulario() {
     setMensajeError("")
     setMensajeExito("")
     try {
-      const res = await fetch(`http://localhost:3001/api/${tablaSeleccionada}`, {
+      const res = await fetch(`https://proyecto-generacion-t.onrender.com/api/${tablaSeleccionada}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
@@ -63,7 +63,7 @@ export default function Formulario() {
 
   const handleDelete = async (id) => {
     try {
-      const res = await fetch(`http://localhost:3001/api/${tablaSeleccionada}/${id}`, {
+      const res = await fetch(`https://proyecto-generacion-t.onrender.com/api/${tablaSeleccionada}/${id}`, {
         method: "DELETE"
       })
       if (res.ok) cargarDatos()
