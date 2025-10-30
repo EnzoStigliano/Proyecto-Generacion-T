@@ -8,6 +8,8 @@ export default function Formulario() {
   const [mensajeError, setMensajeError] = useState("")
   const [mensajeExito, setMensajeExito] = useState("")
 
+  const API_URL = "https://proyecto-generacion-t.onrender.com/api"
+
   const tablas = {
     Proveedor: ["nombre", "cuit", "telefono", "email", "direccion", "ciudad", "provincia", "pais"],
     Categoria: ["nombre", "descripcion"],
@@ -25,7 +27,7 @@ export default function Formulario() {
   }, [tablaSeleccionada])
 
   const cargarDatos = async () => {
-    const res = await fetch(`https://proyecto-generacion-t.onrender.com/api/${tablaSeleccionada}`)
+    const res = await fetch(`${API_URL}/${tablaSeleccionada}`)
     const data = await res.json()
     setData(data)
   }
@@ -39,7 +41,7 @@ export default function Formulario() {
     setMensajeError("")
     setMensajeExito("")
     try {
-      const res = await fetch(`https://proyecto-generacion-t.onrender.com/api/${tablaSeleccionada}`, {
+      const res = await fetch(`${API_URL}/${tablaSeleccionada}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
@@ -54,6 +56,18 @@ export default function Formulario() {
       }
     } catch {
       setMensajeError("Error de conexión con el servidor")
+    }
+  }
+
+  const eliminarRegistro = async (id) => {
+    if (!window.confirm("¿Seguro que querés eliminar este registro?")) return
+    const res = await fetch(`${API_URL}/${tablaSeleccionada}/${id}`, { method: "DELETE" })
+    const result = await res.json()
+    if (res.ok) {
+      setMensajeExito(result.message)
+      cargarDatos()
+    } else {
+      setMensajeError(result.error)
     }
   }
 
@@ -85,23 +99,27 @@ export default function Formulario() {
       {mensajeExito && <p className="exito">{mensajeExito}</p>}
 
       <h2>Datos de {tablaSeleccionada}</h2>
-      <table>
-        <thead>
-          <tr>
-            {data.length > 0 &&
-              Object.keys(data[0]).map((col) => <th key={col}>{col}</th>)}
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((fila) => (
-            <tr key={fila.id || Object.values(fila).join("-")}>
-              {Object.values(fila).map((valor, i) => (
-                <td key={i}>{valor}</td>
-              ))}
+      <div className="table-container">
+        <table>
+          <thead>
+            <tr>
+              {data.length > 0 && Object.keys(data[0]).map((col) => <th key={col}>{col}</th>)}
+              <th>Acciones</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {data.map((fila) => {
+              const idCampo = Object.keys(fila).find(k => k.startsWith("id"))
+              return (
+                <tr key={fila[idCampo]}>
+                  {Object.values(fila).map((valor, i) => <td key={i}>{valor}</td>)}
+                  <td><button className="btn-delete" onClick={() => eliminarRegistro(fila[idCampo])}>Eliminar</button></td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }

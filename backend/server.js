@@ -20,44 +20,38 @@ const tablas = {
   DetalleVenta: ["idVenta", "idProducto", "cantidad"]
 }
 
-// Crear el archivo si no existe
 if (!fs.existsSync(DATA_FILE)) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify({
-    Proveedor: [],
-    Categoria: [],
-    Producto: [],
-    Cliente: [],
-    Empleado: [],
-    CompraStock: [],
-    DetalleCompraStock: [],
-    Venta: [],
-    DetalleVenta: []
-  }, null, 2))
+  fs.writeFileSync(
+    DATA_FILE,
+    JSON.stringify({
+      Proveedor: [],
+      Categoria: [],
+      Producto: [],
+      Cliente: [],
+      Empleado: [],
+      CompraStock: [],
+      DetalleCompraStock: [],
+      Venta: [],
+      DetalleVenta: []
+    }, null, 2)
+  )
 }
 
-// Función para leer datos
 function leerDatos() {
   return JSON.parse(fs.readFileSync(DATA_FILE))
 }
 
-// Función para guardar datos
 function guardarDatos(datos) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(datos, null, 2))
 }
 
-// Obtener todos los registros de una tabla
 app.get("/api/:tabla", (req, res) => {
   const tabla = req.params.tabla
   const datos = leerDatos()
-
-  if (!datos[tabla]) {
-    return res.status(400).json({ error: "Tabla no válida" })
-  }
-
+  if (!datos[tabla]) return res.status(400).json({ error: "Tabla no válida" })
   res.json(datos[tabla])
 })
 
-// Insertar un registro en una tabla
 app.post("/api/:tabla", (req, res) => {
   const tabla = req.params.tabla
   const columnas = tablas[tabla]
@@ -69,7 +63,6 @@ app.post("/api/:tabla", (req, res) => {
   try {
     const nuevoRegistro = {}
 
-    // Verificación básica de campos
     for (const campo of columnas) {
       if (!(campo in req.body)) {
         return res.status(400).json({ error: "Los campos no tienen el formato indicado o no existen" })
@@ -77,12 +70,10 @@ app.post("/api/:tabla", (req, res) => {
       nuevoRegistro[campo] = req.body[campo]
     }
 
-    // Generar id autoincremental
     const idCampo = `id${tabla}`
     const nuevoId = tablaDatos.length > 0 ? tablaDatos[tablaDatos.length - 1][idCampo] + 1 : 1
     nuevoRegistro[idCampo] = nuevoId
 
-    // Simular verificación de claves foráneas
     for (const campo of Object.keys(nuevoRegistro)) {
       if (campo.startsWith("id") && campo !== idCampo) {
         const tablaRelacionada = campo.substring(2)
@@ -99,6 +90,24 @@ app.post("/api/:tabla", (req, res) => {
   } catch {
     res.status(400).json({ error: "Los campos no tienen el formato indicado o no existen" })
   }
+})
+
+// 🔥 NUEVO: eliminar un registro
+app.delete("/api/:tabla/:id", (req, res) => {
+  const { tabla, id } = req.params
+  const datos = leerDatos()
+
+  if (!datos[tabla]) return res.status(400).json({ error: "Tabla no válida" })
+
+  const idCampo = `id${tabla}`
+  const index = datos[tabla].findIndex(r => r[idCampo] == id)
+
+  if (index === -1) return res.status(404).json({ error: "Registro no encontrado" })
+
+  datos[tabla].splice(index, 1)
+  guardarDatos(datos)
+
+  res.json({ message: `${tabla} con ID ${id} eliminado correctamente` })
 })
 
 const PORT = process.env.PORT || 3001
