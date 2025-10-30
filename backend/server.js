@@ -10,23 +10,47 @@ const db = mysql.createConnection({
   host: "localhost",
   user: "root",
   password: "",
-  database: "miapp",
+  database: "almacen",
   port: 33065
 })
 
-app.post("/api/usuarios", (req, res) => {
-  const { nombre, email } = req.body
-  const sql = "INSERT INTO usuarios (nombre, email) VALUES (?, ?)"
-  db.query(sql, [nombre, email], (err, result) => {
-    if (err) return res.status(500).json({ error: err })
-    res.json({ message: "Usuario agregado", id: result.insertId })
+const tablas = {
+  Proveedor: ["nombre", "cuit", "telefono", "email", "direccion", "ciudad", "provincia", "pais"],
+  Categoria: ["nombre", "descripcion"],
+  Producto: ["nombre", "descripcion", "precioCosto", "precioVenta", "stock", "idCategoria", "idProveedor"],
+  Cliente: ["dni", "nombre", "direccion", "ciudad", "codigoPostal", "telefono", "email"],
+  Empleado: ["nombre", "dni", "cargo", "salario", "email", "fechaIngreso"],
+  CompraStock: ["fecha", "total", "idProveedor", "idEmpleado"],
+  DetalleCompraStock: ["idCompra", "idProducto", "cantidad"],
+  Venta: ["fecha", "total", "tipoPago", "idCliente", "idEmpleado"],
+  DetalleVenta: ["idVenta", "idProducto", "cantidad"]
+}
+
+// Insertar datos genérico
+app.post("/api/:tabla", (req, res) => {
+  const tabla = req.params.tabla
+  const columnas = tablas[tabla]
+  if (!columnas) return res.status(400).json({ error: "Tabla no válida" })
+
+  const valores = columnas.map(c => req.body[c])
+
+  const placeholders = columnas.map(() => "?").join(", ")
+  const sql = `INSERT INTO ${tabla} (${columnas.join(", ")}) VALUES (${placeholders})`
+
+  db.query(sql, valores, (err, result) => {
+    if (err) {
+      return res.status(400).json({ error: "Los campos no tienen el formato indicado o no existen" })
+    }
+    res.json({ message: `${tabla} agregado correctamente`, id: result.insertId })
   })
 })
 
-app.get("/api/usuarios", (req, res) => {
-  const sql = "SELECT * FROM usuarios"
+// Mostrar datos de una tabla
+app.get("/api/:tabla", (req, res) => {
+  const tabla = req.params.tabla
+  const sql = `SELECT * FROM ${tabla}`
   db.query(sql, (err, result) => {
-    if (err) return res.status(500).json({ error: err })
+    if (err) return res.status(400).json({ error: "Error al obtener los datos" })
     res.json(result)
   })
 })
