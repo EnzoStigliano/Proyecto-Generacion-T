@@ -1,0 +1,33 @@
+{
+  "Proveedor": [
+    {
+      "nombre": "213",
+      "cuit": "123",
+      "telefono": "31321",
+      "email": "123",
+      "direccion": "132",
+      "ciudad": "123",
+      "provincia": "123",
+      "pais": "123",
+      "idProveedor": 1
+    }
+  ],
+  "Categoria": [],
+  "Producto": [],
+  "Cliente": [],
+  "Empleado": [
+    {
+      "nombre": "123",
+      "dni": "asd",
+      "cargo": "as",
+      "salario": "asd",
+      "email": "asd",
+      "fechaIngreso": "asd",
+      "idEmpleado": 1
+    }
+  ],
+  "CompraStock": [],
+  "DetalleCompraStock": [],
+  "Venta": [],
+  "DetalleVenta": []
+}

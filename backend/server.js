@@ -1,18 +1,12 @@
 const express = require("express")
-const mysql = require("mysql2")
 const cors = require("cors")
+const fs = require("fs")
 
 const app = express()
 app.use(cors())
 app.use(express.json())
 
-const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "almacen",
-  port: 33065
-})
+const DATA_FILE = "./almacen.json"
 
 const tablas = {
   Proveedor: ["nombre", "cuit", "telefono", "email", "direccion", "ciudad", "provincia", "pais"],
@@ -26,33 +20,85 @@ const tablas = {
   DetalleVenta: ["idVenta", "idProducto", "cantidad"]
 }
 
-// Insertar datos genérico
+// Crear el archivo si no existe
+if (!fs.existsSync(DATA_FILE)) {
+  fs.writeFileSync(DATA_FILE, JSON.stringify({
+    Proveedor: [],
+    Categoria: [],
+    Producto: [],
+    Cliente: [],
+    Empleado: [],
+    CompraStock: [],
+    DetalleCompraStock: [],
+    Venta: [],
+    DetalleVenta: []
+  }, null, 2))
+}
+
+// Función para leer datos
+function leerDatos() {
+  return JSON.parse(fs.readFileSync(DATA_FILE))
+}
+
+// Función para guardar datos
+function guardarDatos(datos) {
+  fs.writeFileSync(DATA_FILE, JSON.stringify(datos, null, 2))
+}
+
+// Obtener todos los registros de una tabla
+app.get("/api/:tabla", (req, res) => {
+  const tabla = req.params.tabla
+  const datos = leerDatos()
+
+  if (!datos[tabla]) {
+    return res.status(400).json({ error: "Tabla no válida" })
+  }
+
+  res.json(datos[tabla])
+})
+
+// Insertar un registro en una tabla
 app.post("/api/:tabla", (req, res) => {
   const tabla = req.params.tabla
   const columnas = tablas[tabla]
   if (!columnas) return res.status(400).json({ error: "Tabla no válida" })
 
-  const valores = columnas.map(c => req.body[c])
+  const datos = leerDatos()
+  const tablaDatos = datos[tabla]
 
-  const placeholders = columnas.map(() => "?").join(", ")
-  const sql = `INSERT INTO ${tabla} (${columnas.join(", ")}) VALUES (${placeholders})`
+  try {
+    const nuevoRegistro = {}
 
-  db.query(sql, valores, (err, result) => {
-    if (err) {
-      return res.status(400).json({ error: "Los campos no tienen el formato indicado o no existen" })
+    // Verificación básica de campos
+    for (const campo of columnas) {
+      if (!(campo in req.body)) {
+        return res.status(400).json({ error: "Los campos no tienen el formato indicado o no existen" })
+      }
+      nuevoRegistro[campo] = req.body[campo]
     }
-    res.json({ message: `${tabla} agregado correctamente`, id: result.insertId })
-  })
+
+    // Generar id autoincremental
+    const idCampo = `id${tabla}`
+    const nuevoId = tablaDatos.length > 0 ? tablaDatos[tablaDatos.length - 1][idCampo] + 1 : 1
+    nuevoRegistro[idCampo] = nuevoId
+
+    // Simular verificación de claves foráneas
+    for (const campo of Object.keys(nuevoRegistro)) {
+      if (campo.startsWith("id") && campo !== idCampo) {
+        const tablaRelacionada = campo.substring(2)
+        if (datos[tablaRelacionada] && !datos[tablaRelacionada].find(r => r[`id${tablaRelacionada}`] == nuevoRegistro[campo])) {
+          return res.status(400).json({ error: "Los campos no tienen el formato indicado o no existen" })
+        }
+      }
+    }
+
+    tablaDatos.push(nuevoRegistro)
+    guardarDatos(datos)
+
+    res.json({ message: `${tabla} agregado correctamente`, id: nuevoId })
+  } catch {
+    res.status(400).json({ error: "Los campos no tienen el formato indicado o no existen" })
+  }
 })
 
-// Mostrar datos de una tabla
-app.get("/api/:tabla", (req, res) => {
-  const tabla = req.params.tabla
-  const sql = `SELECT * FROM ${tabla}`
-  db.query(sql, (err, result) => {
-    if (err) return res.status(400).json({ error: "Error al obtener los datos" })
-    res.json(result)
-  })
-})
-
-app.listen(3001, () => console.log("Servidor corriendo en http://localhost:3001"))
+app.listen(3001, () => console.log("Servidor JSON corriendo en http://localhost:3001"))

@@ -25,7 +25,7 @@ export default function Formulario() {
   }, [tablaSeleccionada])
 
   const cargarDatos = async () => {
-    const res = await fetch(`http://localhost:3001/api/${tablaSeleccionada}`)
+    const res = await fetch(`https://tu-backend-en-render.com/api/${tablaSeleccionada}`)
     const data = await res.json()
     setData(data)
   }
@@ -39,7 +39,7 @@ export default function Formulario() {
     setMensajeError("")
     setMensajeExito("")
     try {
-      const res = await fetch(`http://localhost:3001/api/${tablaSeleccionada}`, {
+      const res = await fetch(`https://tu-backend-en-render.com/api/${tablaSeleccionada}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
