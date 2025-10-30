@@ -101,4 +101,5 @@ app.post("/api/:tabla", (req, res) => {
   }
 })
 
-app.listen(3001, () => console.log("Servidor JSON corriendo en http://localhost:3001"))
+const PORT = process.env.PORT || 3001
+app.listen(PORT, () => console.log(`Servidor JSON corriendo en el puerto ${PORT}`))

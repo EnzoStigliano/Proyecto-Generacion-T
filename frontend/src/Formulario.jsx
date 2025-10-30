@@ -25,7 +25,7 @@ export default function Formulario() {
   }, [tablaSeleccionada])
 
   const cargarDatos = async () => {
-    const res = await fetch(`https://proyecto-generacion-t.onrender.com/${tablaSeleccionada}`)
+    const res = await fetch(`https://proyecto-generacion-t.onrender.com/api/${tablaSeleccionada}`)
     const data = await res.json()
     setData(data)
   }
@@ -39,7 +39,7 @@ export default function Formulario() {
     setMensajeError("")
     setMensajeExito("")
     try {
-      const res = await fetch(`https://proyecto-generacion-t.onrender.com/${tablaSeleccionada}`, {
+      const res = await fetch(`https://proyecto-generacion-t.onrender.com/api/${tablaSeleccionada}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
