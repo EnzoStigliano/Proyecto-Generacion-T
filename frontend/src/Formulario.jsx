@@ -99,27 +99,35 @@ export default function Formulario() {
       {mensajeExito && <p className="exito">{mensajeExito}</p>}
 
       <h2>Datos de {tablaSeleccionada}</h2>
-      <div className="table-container">
+      
+      {data.length === 0 ? (
+        <p>No hay registros disponibles.</p>
+      ) : (
         <table>
           <thead>
             <tr>
-              {data.length > 0 && Object.keys(data[0]).map((col) => <th key={col}>{col}</th>)}
+              {Object.keys(data[0]).map((col) => (
+                <th key={col}>{col}</th>
+              ))}
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {data.map((fila) => {
-              const idCampo = Object.keys(fila).find(k => k.startsWith("id"))
-              return (
-                <tr key={fila[idCampo]}>
-                  {Object.values(fila).map((valor, i) => <td key={i}>{valor}</td>)}
-                  <td><button className="btn-delete" onClick={() => eliminarRegistro(fila[idCampo])}>Eliminar</button></td>
-                </tr>
-              )
-            })}
+            {data.map((fila) => (
+              <tr key={fila.id || Object.values(fila).join("-")}>
+                {Object.values(fila).map((valor, i) => (
+                  <td key={i}>{valor}</td>
+                ))}
+                <td>
+                  <button className="eliminar" onClick={() => handleDelete(fila[`id${tablaSeleccionada}`])}>
+                    Eliminar
+                  </button>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
-      </div>
+      )}
     </div>
   )
 }
